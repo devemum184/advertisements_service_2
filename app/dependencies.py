@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +46,7 @@ async def get_current_user(
 async def get_current_user_optional(
         credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
         db: AsyncSession = Depends(get_db)
-) -> User:
+) -> Optional[User]:
     if not credentials:
         return None
     try:
@@ -63,18 +64,18 @@ def require_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-def require_owner_or_admin(resource_user_id: int):
-    async def checker(
+# Фабрика зависимостей — возвращает функцию, которая принимает user_id
+def require_owner_or_admin(user_id: int):
+    async def dependency(
             current_user: User = Depends(get_current_user),
-            db: AsyncSession = Depends(get_db)
-    ):
+    ) -> User:
         if current_user.role == UserRole.ADMIN:
             return current_user
-        if current_user.id != resource_user_id:
+        if current_user.id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You can only modify your own data"
             )
         return current_user
 
-    return checker
+    return dependency

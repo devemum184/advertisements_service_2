@@ -1,6 +1,6 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
 from app import crud, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, require_owner_or_admin, require_admin
@@ -42,7 +42,7 @@ async def get_all_users(
 async def update_user(
     user_id: int,
     user_data: schemas.UserUpdate,
-    current_user: User = Depends(require_owner_or_admin(user_id)),
+    current_user: User = Depends(lambda: require_owner_or_admin(user_id)),
     db: AsyncSession = Depends(get_db)
 ):
     user = await crud.update_user(db, user_id, user_data)
@@ -53,7 +53,7 @@ async def update_user(
 @router.delete("/{user_id}", status_code=204)
 async def delete_user(
     user_id: int,
-    current_user: User = Depends(require_owner_or_admin(user_id)),
+    current_user: User = Depends(lambda: require_owner_or_admin(user_id)),
     db: AsyncSession = Depends(get_db)
 ):
     deleted = await crud.delete_user(db, user_id)

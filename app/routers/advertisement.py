@@ -1,6 +1,6 @@
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
 from app import crud, schemas
 from app.database import get_db
 from app.dependencies import get_current_user, get_current_user_optional, require_admin
@@ -62,7 +62,7 @@ async def delete_ad(
 @router.get("/{advertisement_id}", response_model=schemas.AdvertisementResponse)
 async def get_ad(
         advertisement_id: int,
-        current_user: User = Depends(get_current_user_optional),
+        current_user: Optional[User] = Depends(get_current_user_optional),
         db: AsyncSession = Depends(get_db)
 ):
     ad = await crud.get_advertisement(db, advertisement_id)
@@ -76,7 +76,7 @@ async def search_ads(
         title: Optional[str] = Query(None, description="Search by title (partial match)"),
         min_price: Optional[float] = Query(None, description="Minimum price"),
         max_price: Optional[float] = Query(None, description="Maximum price"),
-        current_user: User = Depends(get_current_user_optional),
+        current_user: Optional[User] = Depends(get_current_user_optional),
         db: AsyncSession = Depends(get_db)
 ):
     return await crud.search_advertisements(db, title, min_price, max_price)
